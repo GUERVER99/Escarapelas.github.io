@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de PDF</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin: 0 auto;
+            max-width: 400px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+
+        form.dark-mode {
+            background: #333;
+            color: white;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input {
+            padding: 8px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        input.dark-mode {
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button.dark-mode {
+            background-color: #555;
+            color: #f9f9f9;
+        }
+
+        button.dark-mode:hover {
+            background-color: #666;
+        }
+
+        .toggle-button {
+            margin: 10px 0;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .toggle-button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 600px) {
+            form {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Formulario de Registro</h1>
+    <button class="toggle-button" id="toggleMode">Modo Oscuro</button>
+    <form id="registroForm">
+        <label for="foto">Foto:</label>
+        <input type="file" id="foto" accept="image/*" required><br>
+
+        <label for="club">Club:</label>
+        <input type="text" id="club" required><br>
+
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" required><br>
+
+        <label for="fechaNacimiento">Fecha de Nacimiento:</label>
+        <input type="date" id="fechaNacimiento" required><br>
+
+        <label for="numeroIdentidad">Número de Identidad:</label>
+        <input type="text" id="numeroIdentidad" required><br>
+
+        <label for="categoria">Categoría:</label>
+        <input type="text" id="categoria" required><br>
+
+        <button type="submit">Generar PDF</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        document.getElementById("registroForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Evitar el envío del formulario
+    
+            const foto = document.getElementById("foto").files[0];
+            const club = document.getElementById("club").value;
+            const nombre = document.getElementById("nombre").value;
+            const fechaNacimiento = document.getElementById("fechaNacimiento").value;
+            const numeroIdentidad = document.getElementById("numeroIdentidad").value;
+            const categoria = document.getElementById("categoria").value;
+    
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgData = e.target.result;
+    
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+    
+                // Cargar la plantilla de escarapela
+                const templateImage = 'ESCARAPELA.jpg'; // Asegúrate de que la imagen esté en la misma carpeta
+                const templateImg = new Image();
+                templateImg.onload = function() {
+                    doc.addImage(templateImg, 'JPEG', 0, 0, 210, 297); // Ajusta el tamaño según la plantilla
+    
+                    // Agregar la foto del usuario
+                    if (foto) {
+                        doc.addImage(imgData, 'JPEG', 75, 60, 61, 90); // Ajustar posición y tamaño de la foto
+                    }
+    
+                    // Agregar el texto
+                    doc.setFont("Arial", "normal");
+                    doc.setFontSize(15);
+                    doc.text(`${club}`, 70, 165); // Ajustar la posición de Club
+                    doc.text(`${nombre}`, 70, 178); // Ajustar la posición de Nombre
+                    doc.text(`${fechaNacimiento}`, 120, 192); // Ajustar la posición de Fecha de Nacimiento
+                    doc.text(`${numeroIdentidad}`, 75, 205); // Ajustar la posición de Número de Identidad
+                    doc.text(`${categoria}`, 80, 217); // Ajustar la posición de Categoría
+    
+                    // Guardar el PDF
+                    doc.save("registro.pdf");
+                };
+                
+                // Asignar la fuente de la imagen a cargar
+                templateImg.src = templateImage; // Carga la imagen de la plantilla
+            };
+    
+            if (foto) {
+                reader.readAsDataURL(foto); // Convertir la foto a DataURL
+            }
+        });
+
+        // Funcionalidad para el modo oscuro
+        const toggleButton = document.getElementById("toggleMode");
+        toggleButton.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+            const form = document.getElementById("registroForm");
+            form.classList.toggle("dark-mode");
+            const inputs = form.querySelectorAll("input");
+            inputs.forEach(input => input.classList.toggle("dark-mode"));
+            toggleButton.classList.toggle("dark-mode");
+            toggleButton.textContent = toggleButton.textContent === "Modo Oscuro" ? "Modo Claro" : "Modo Oscuro";
+        });
+    </script>
+</body>
+</html>
